@@ -1,6 +1,7 @@
 using GlassDesk.Core.Models.Settings;
 using GlassDesk.Dock;
 using GlassDesk.Platform.Displays;
+using GlassDesk.Platform.Shell;
 
 namespace GlassDesk.Dock.Tests;
 
@@ -128,5 +129,83 @@ public class DockPlacementCalculatorTests
 
         Assert.Equal(1392, rect.Bottom);
         Assert.Equal(1440 - 48, PrimaryWorkArea.Bottom);
+    }
+
+    [Fact]
+    public void 系统任务栏自动隐藏时_工作区扩满屏幕_有效工作区保留任务栏缓冲避让()
+    {
+        // 模拟 2560x1440 屏幕，任务栏开启自动隐藏后 Windows 将 WorkArea 报告为全屏 2560x1440
+        var display = new DisplayInfo(
+            DeviceName: @"\\.\DISPLAY1",
+            IsPrimary: true,
+            Bounds: new PixelRect(0, 0, 2560, 1440),
+            WorkArea: new PixelRect(0, 0, 2560, 1440),
+            Dpi: 144);
+
+        const int taskbarHeight = 72; // 48 DIP @150% = 72 物理像素
+
+        // 默认开启缓冲避让，停靠在底部
+        var effective = TaskbarService.ResolveEffectiveWorkArea(
+            display,
+            reserveWhenAutoHide: true,
+            isBottomPlacement: true,
+            isAutoHideOverride: true,
+            taskbarThicknessOverride: taskbarHeight);
+
+        // 有效工作区底边应上移 72 像素（即 1440 - 72 = 1368）
+        Assert.Equal(1440 - taskbarHeight, effective.Bottom);
+        Assert.Equal(1440 - taskbarHeight, effective.Height);
+
+        // 计算 Dock 最终停靠位置
+        var dockRect = DockPlacementCalculator.Calculate(
+            effective, DockPlacement.BottomCenter, 0, 0, DockWidth, DockHeight, PrimaryDpi);
+
+        // Dock 的底边应精确落在 1368，保留缓冲放在任务栏上方，绝不沉到屏幕物理底边 1440
+        Assert.Equal(1440 - taskbarHeight, dockRect.Bottom);
+    }
+
+    [Fact]
+    public void 系统任务栏自动隐藏但关闭避让选项时_Dock贴屏幕物理最底边()
+    {
+        var display = new DisplayInfo(
+            DeviceName: @"\\.\DISPLAY1",
+            IsPrimary: true,
+            Bounds: new PixelRect(0, 0, 2560, 1440),
+            WorkArea: new PixelRect(0, 0, 2560, 1440),
+            Dpi: 144);
+
+        var effective = TaskbarService.ResolveEffectiveWorkArea(
+            display,
+            reserveWhenAutoHide: false,
+            isBottomPlacement: true,
+            isAutoHideOverride: true,
+            taskbarThicknessOverride: 72);
+
+        Assert.Equal(1440, effective.Bottom);
+
+        var dockRect = DockPlacementCalculator.Calculate(
+            effective, DockPlacement.BottomCenter, 0, 0, DockWidth, DockHeight, PrimaryDpi);
+
+        Assert.Equal(1440, dockRect.Bottom);
+    }
+
+    [Fact]
+    public void 顶部居中停靠时不触发底部任务栏避让()
+    {
+        var display = new DisplayInfo(
+            DeviceName: @"\\.\DISPLAY1",
+            IsPrimary: true,
+            Bounds: new PixelRect(0, 0, 2560, 1440),
+            WorkArea: new PixelRect(0, 0, 2560, 1440),
+            Dpi: 144);
+
+        var effective = TaskbarService.ResolveEffectiveWorkArea(
+            display,
+            reserveWhenAutoHide: true,
+            isBottomPlacement: false,
+            isAutoHideOverride: true,
+            taskbarThicknessOverride: 72);
+
+        Assert.Equal(1440, effective.Bottom);
     }
 }

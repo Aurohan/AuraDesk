@@ -45,6 +45,7 @@ public partial class DockWindow : GlassWindow
     /// <summary>宿主提供与桌面图标快捷键相同的动作，不依赖快捷键是否启用。</summary>
     public Action? ToggleDesktopIcons { get; set; }
     private System.Windows.Threading.DispatcherTimer? _failureNoticeTimer;
+    private System.Windows.Interop.HwndSource? _dockHwndSource;
     private readonly DockTileStrip _tileStrip;
 
     private readonly List<DockTileModel> _models = [];
@@ -1392,7 +1393,7 @@ public partial class DockWindow : GlassWindow
         var heightPixels = Math.Max(1, display.ToPixels(heightDips));
 
         _restingRect = DockPlacementCalculator.Calculate(
-            display.WorkArea,
+            TaskbarService.ResolveEffectiveWorkArea(display, Settings.ReserveTaskbarSpaceWhenHidden, Settings.Placement is DockPlacement.BottomCenter or DockPlacement.BottomLeft or DockPlacement.BottomRight),
             Settings.Placement,
             Settings.OffsetX,
             Settings.OffsetY,
@@ -1400,8 +1401,8 @@ public partial class DockWindow : GlassWindow
             heightPixels,
             display.Dpi);
 
-        if (PrimaryDisplaySession is { IsAvailable: true } session)
-            _restingRect = session.ClampWindowToWorkArea(_restingRect);
+        _restingRect = DockPlacementCalculator.ClampToWorkArea(_restingRect, TaskbarService.ResolveEffectiveWorkArea(display, Settings.ReserveTaskbarSpaceWhenHidden, Settings.Placement is DockPlacement.BottomCenter or DockPlacement.BottomLeft or DockPlacement.BottomRight));
+
 
         _fullyHiddenOffsetPixels = SlideOutDistancePixels(_restingRect, display.Bounds, Settings.Placement);
 
@@ -1690,12 +1691,32 @@ public partial class DockWindow : GlassWindow
         // 必须在句柄建立之后改扩展样式：点击本窗口时不得把前台让给别人。
         // 弹出物要取焦点时显式调 WindowActivation.TryBringToForeground。
         WindowStyles.MakeNoActivate(Handle);
+
+        _dockHwndSource = System.Windows.Interop.HwndSource.FromHwnd(Handle);
+        _dockHwndSource?.AddHook(DockWndProc);
+    }
+
+    private nint DockWndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
+    {
+        const int WmSettingChange = 0x001A;
+        const int WmDisplayChange = 0x007E;
+
+        if (msg is WmSettingChange or WmDisplayChange)
+        {
+            // 系统任务栏设置、工作区或屏幕分辨率发生变化，立即刷新显示器信息与停靠位置
+            PrimaryDisplaySession?.TryRefreshPrimary(DisplayService.Primary());
+            RefreshDisplayPlacement();
+        }
+
+        return 0;
     }
 
     protected override void OnClosed(EventArgs e)
     {
         _frameTimer?.Stop();
         _failureNoticeTimer?.Stop();
+        _dockHwndSource?.RemoveHook(DockWndProc);
+        _dockHwndSource = null;
         if (_dockSettings is not null)
         {
             _dockSettings.Changed -= OnDockSettingsChanged;

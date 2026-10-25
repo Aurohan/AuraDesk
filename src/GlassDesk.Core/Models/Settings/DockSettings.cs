@@ -88,6 +88,12 @@ public sealed class DockSettings
     /// </summary>
     public string? TargetDisplayId { get; set; }
 
+    /// <summary>
+    /// 当系统任务栏开启自动隐藏时，是否保留任务栏原本的高度作为底部缓冲避让空间，
+    /// 确保 Dock 保持在任务栏原本的上方，且当任务栏弹出时绝不重叠。
+    /// </summary>
+    public bool ReserveTaskbarSpaceWhenHidden { get; set; } = true;
+
     /// <summary>在拥有运行中窗口的图标下方显示圆点。</summary>
     public bool ShowRunningIndicator { get; set; } = true;
 }

@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -476,6 +476,10 @@ internal sealed partial class AppHost : IDisposable
         if (TrayIcon.WmTaskbarCreated != 0 && (uint)msg == TrayIcon.WmTaskbarCreated)
         {
             _tray?.Recreate();
+            _primaryDisplaySession?.TryRefreshPrimary(DisplayService.Primary());
+            _dock?.RefreshDisplayPlacement();
+            _statusBar?.RefreshDisplayPlacement();
+            _launcher?.RefreshDisplayPlacement();
             handled = true;
             return 0;
         }

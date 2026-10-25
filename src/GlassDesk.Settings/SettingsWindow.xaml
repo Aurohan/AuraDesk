@@ -1,4 +1,4 @@
-﻿<controls:GlassWindow
+<controls:GlassWindow
     x:Class="GlassDesk.Settings.SettingsWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -250,6 +250,11 @@
               <TextBlock Margin="0,2,0,8" TextWrapping="Wrap" FontSize="11"
                          Foreground="{Binding SecondaryForegroundBrush, RelativeSource={RelativeSource AncestorType=Window}}"
                          Text="勾选后，当有其他应用窗口覆盖 Dock 区域或全屏时，鼠标划过边缘不会弹出 Dock。" />
+              <CheckBox x:Name="ReserveTaskbarSpaceWhenHiddenCheck" Margin="0,4,0,4" Content="系统任务栏自动隐藏时保留缓冲避让"
+                        AutomationProperties.Name="系统任务栏自动隐藏时保留缓冲避让" Checked="OnDockControlChanged" Unchecked="OnDockControlChanged" />
+              <TextBlock Margin="0,2,0,8" TextWrapping="Wrap" FontSize="11"
+                         Foreground="{Binding SecondaryForegroundBrush, RelativeSource={RelativeSource AncestorType=Window}}"
+                         Text="开启后，即使在 Windows 系统个性化设置中开启了自动隐藏任务栏，Dock 仍保持在任务栏原本的上方，留出安全缓冲，避免唤出任务栏时与 Dock 发生重叠冲突。" />
               <TextBlock Margin="0,12,0,4" Text="左侧固定图标" />
               <CheckBox x:Name="ShowLauncherEntryCheckBox" Content="显示启动台" Margin="0,4"
                         AutomationProperties.Name="Dock 显示启动台" Checked="OnDockControlChanged" Unchecked="OnDockControlChanged" />

@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Text;
 using System.Windows;
 using System.Windows.Input;
@@ -224,6 +224,7 @@ public partial class SettingsWindow : GlassWindow
             DockOffsetXSlider.Value = Coerce(dock.OffsetX, -200, 200);
             DockOffsetYSlider.Value = Coerce(dock.OffsetY, -200, 200);
             BlockRevealWhenCoveredCheck.IsChecked = dock.BlockRevealWhenCovered;
+            ReserveTaskbarSpaceWhenHiddenCheck.IsChecked = dock.ReserveTaskbarSpaceWhenHidden;
             // 信息栏
             ShowStatusBarCheck.IsChecked = dock.ShowStatusBar;
             StatusBarOnlyOnDesktopCheck.IsChecked = dock.StatusBarOnlyOnDesktop;
@@ -385,6 +386,7 @@ public partial class SettingsWindow : GlassWindow
             EdgeRevealEnabled = false,
             EdgeHotzoneSize = previousDock.EdgeHotzoneSize,
             BlockRevealWhenCovered = BlockRevealWhenCoveredCheck.IsChecked == true,
+            ReserveTaskbarSpaceWhenHidden = ReserveTaskbarSpaceWhenHiddenCheck.IsChecked == true,
             TargetDisplayId = previousDock.TargetDisplayId,
             ShowRunningIndicator = previousDock.ShowRunningIndicator,
             // 信息栏
