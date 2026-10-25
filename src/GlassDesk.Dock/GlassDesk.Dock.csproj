@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Dock bar. Phase 1 ships the window shell only; the icon bar, magnification and pinning
+    arrive in phase 4. The AppServices reference is how the dock reaches the shared
+    application library (through AppServiceHost) — it must never reference GlassDesk.App.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <RootNamespace>GlassDesk.Dock</RootNamespace>
+    <UseWPF>true</UseWPF>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);CS8600;CS8601;CS8602;CS8603;CS8604;CS8618;CS8625;CA1806;CA1822;CS0169;CS0414;CS4014;CA1001;CS8619</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GlassDesk.AppServices\GlassDesk.AppServices.csproj" />
+    <ProjectReference Include="..\GlassDesk.Core\GlassDesk.Core.csproj" />
+    <ProjectReference Include="..\GlassDesk.Platform\GlassDesk.Platform.csproj" />
+    <ProjectReference Include="..\GlassDesk.UI\GlassDesk.UI.csproj" />
+  </ItemGroup>
+
+</Project>
